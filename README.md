@@ -1,3 +1,4 @@
+````md id="mdx8f4"
 # IAM Automated User Onboarding System
 
 A Flask-based Identity and Access Management (IAM) system designed to simulate secure enterprise user onboarding workflows with Role-Based Access Control (RBAC), authentication, and activity logging.
@@ -22,11 +23,25 @@ A Flask-based Identity and Access Management (IAM) system designed to simulate s
 3. Install dependencies:
    ```bash
    pip install -r requirements.txt
-Run the application:
+````
 
-python app.py
+4. Run the application:
 
-Future Enhancements
-Multi-Factor Authentication (MFA)
-LDAP Integration
-Cloud Deployment
+   ```bash
+   python onboarding.py
+   ```
+
+## Example Roles
+
+* Developer
+* HR
+* Finance
+* Intern
+
+## Future Enhancements
+
+* Multi-Factor Authentication (MFA)
+* LDAP Integration
+* Cloud Deployment
+
+
