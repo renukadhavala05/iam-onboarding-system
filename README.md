@@ -22,3 +22,11 @@ A Flask-based Identity and Access Management (IAM) system designed to simulate s
 3. Install dependencies:
    ```bash
    pip install -r requirements.txt
+Run the application:
+
+python app.py
+
+Future Enhancements
+Multi-Factor Authentication (MFA)
+LDAP Integration
+Cloud Deployment
