@@ -1,0 +1,79 @@
+2026-02-08 19:37:28.960788 - User created: renu.developer in Developer
+2026-02-08 19:39:42.144141 - User created: renuka.hr in HR
+2026-02-08 19:56:26.474208 - User created: jyotsna.finance in Finance
+2026-03-22 20:05:44.505039 - User created: renuka.developer
+2026-03-22 20:12:08.683560 - User created: ramu.hr
+[2026-03-31 23:22:21] User: admin | Action: Create Account | Status: SUCCESS | Details: Role: Admin
+[2026-03-31 23:24:22] User: renuka | Action: Login Attempt | Status: FAILED | Details: User does not exist
+[2026-03-31 23:25:55] User: admin | Action: Password Verification | Status: FAILED | Details: Attempt 1/3
+[2026-03-31 23:27:34] User: admin | Action: MFA Verification | Status: FAILED | Details: 
+[2026-03-31 23:29:01] User: admin | Action: Login Anomaly | Status: DETECTED | Details: IP changed from 192.168.1.1 to 192.168.1.2
+[2026-03-31 23:29:08] User: admin | Action: Login | Status: SUCCESS | Details: IP: 192.168.1.2
+[2026-03-31 23:29:12] User: admin | Action: Resource Access | Status: GRANTED | Details: Manage Users
+[2026-03-31 23:29:36] User: abhinaya.intern | Action: Create Account | Status: SUCCESS | Details: Role: Intern
+[2026-03-31 23:29:42] User: admin | Action: Resource Access | Status: GRANTED | Details: Unlock Accounts
+[2026-03-31 23:30:16] User: admin | Action: Resource Access | Status: GRANTED | Details: View Threat Logs
+[2026-03-31 23:30:21] User: admin | Action: Logout | Status: SUCCESS | Details: 
+[2026-03-31 23:35:51] User: user | Action: Login Attempt | Status: FAILED | Details: User does not exist
+[2026-03-31 23:38:07] User: admin | Action: Web Location Anomaly | Status: DETECTED | Details: IP changed to 192.168.1.1
+[2026-03-31 23:39:51] User: admin | Action: Web Login | Status: SUCCESS | Details: 
+[2026-03-31 23:47:29] User: sushma | Action: Web Login | Status: FAILED | Details: User not found
+[2026-03-31 23:53:43] User: kameswari | Action: Web Login Attempt | Status: FAILED | Details: User does not exist
+[2026-03-31 23:55:24] User: Adithya | Action: Identity Auto-Created | Status: SUCCESS | Details: Demo Mode On-the-fly
+[2026-03-31 23:55:24] User: Adithya | Action: Web Identity Verified | Status: SUCCESS | Details: Always-Success Demo Mode
+[2026-03-31 23:55:29] User: Adithya | Action: Web Identity Verified | Status: SUCCESS | Details: Always-Success Demo Mode
+[2026-03-31 23:55:44] User: Adithya | Action: Web Session Authorized | Status: SUCCESS | Details: 
+[2026-03-31 23:55:44] User: Adithya | Action: API Access | Status: DENIED | Details: Unauthorized route
+[2026-03-31 23:56:29] User: Adithya | Action: Simulated Unauthorized Action | Status: BLOCKED | Details: Risk -> 45
+[2026-03-31 23:59:58] User:  | Action: Identity Auto-Created | Status: SUCCESS | Details: Demo Mode On-the-fly
+[2026-03-31 23:59:58] User:  | Action: Web Identity Verified | Status: SUCCESS | Details: Always-Success Demo Mode
+[2026-04-01 00:00:10] User:  | Action: Web Session Authorized | Status: SUCCESS | Details: 
+[2026-04-01 00:00:12] User:  | Action: API Access | Status: DENIED | Details: Unauthorized route
+2026-04-09 21:32:21.708359 - User registered: renuka (Admin)
+2026-04-12 12:08:13.221961 - User registered: lasyaa122 (User)
+2026-04-12 12:25:20.598551 - User registered: mauri067 (User)
+2026-04-12 12:27:26.905626 - Successful Zero Trust Login: mauri067 from 127.0.0.1
+2026-04-12 12:33:26.311114 - Logout: mauri067
+2026-04-12 12:49:54.038270 - Successful Zero Trust Login: mauri067 from 127.0.0.1
+2026-04-12 12:50:33.735573 - Logout: mauri067
+2026-04-12 13:00:40.864246 - Password reset initiated for: lasyaa122
+2026-04-12 13:00:53.457666 - Password updated securely for: lasyaa122
+2026-04-12 13:01:48.579496 - Successful Zero Trust Login: lasyaa122 from 127.0.0.1
+2026-04-12 13:01:58.162926 - Logout: lasyaa122
+2026-04-12 13:03:25.859793 - User registered: admin12 (User)
+2026-04-12 13:04:42.468053 - Successful Zero Trust Login: admin12 from 127.0.0.1
+2026-04-12 13:11:07.983864 - Logout: admin12
+2026-04-12 13:11:39.032699 - Successful Zero Trust Login: admin12 from 127.0.0.1
+2026-04-12 13:12:02.783522 - Logout: admin12
+2026-04-12 13:13:13.314270 - Successful Zero Trust Login: admin12 from 127.0.0.1
+2026-04-12 13:28:15.350963 - Logout: admin12
+2026-04-12 13:28:49.324883 - Password reset initiated for: lasyaa122
+2026-04-12 13:29:34.632411 - Password updated securely for: lasyaa122
+2026-04-12 13:29:56.920596 - Successful Zero Trust Login: lasyaa122 from 127.0.0.1
+2026-04-12 13:30:28.572336 - Logout: lasyaa122
+2026-04-12 13:31:06.502621 - Successful Zero Trust Login: mauri067 from 127.0.0.1
+2026-04-17 18:31:40.133147 - Password reset initiated for: admin12
+2026-04-17 18:31:51.226567 - Password updated securely for: admin12
+2026-04-17 18:32:41.504901 - Successful Zero Trust Login: admin12 from 127.0.0.1
+2026-04-17 18:44:55.806934 - Logout: admin12
+2026-04-17 18:45:23.468443 - Password reset initiated for: renuka
+2026-04-17 18:45:37.839191 - Password updated securely for: renuka
+2026-04-17 18:46:18.586314 - Successful Zero Trust Login: renuka from 127.0.0.1
+2026-04-17 19:04:50.719891 - Adaptive Identity Re-verified: renuka
+2026-04-17 19:11:37.117513 - Logout: renuka
+2026-04-17 19:12:04.092362 - Password reset initiated for: anu_123
+2026-04-17 19:12:12.649918 - Password updated securely for: anu_123
+2026-04-17 19:12:51.116036 - Successful Zero Trust Login: anu_123 from 127.0.0.1
+2026-04-17 19:15:00.819859 - Logout: anu_123
+2026-04-17 19:16:01.511182 - Successful Zero Trust Login: renuka from 127.0.0.1
+2026-04-17 19:28:33.234459 - Adaptive Identity Re-verified: renuka
+2026-04-17 19:35:56.789019 - ADMIN ACTION: User mauri067 Deactivated by renuka
+2026-04-17 19:36:00.107195 - ADMIN ACTION: User mauri067 Activated by renuka
+2026-04-28 22:15:34.788761 - Password reset initiated for: lasyaa122
+2026-04-28 22:15:47.677222 - Password updated securely for: lasyaa122
+2026-04-28 22:16:35.865467 - Successful Zero Trust Login: lasyaa122 from 127.0.0.1
+2026-04-28 22:17:26.891648 - Logout: lasyaa122
+2026-04-28 22:19:34.528552 - Password reset initiated for: renuka
+2026-04-28 22:19:42.895114 - Password updated securely for: renuka
+2026-04-28 22:19:57.057538 - Successful Zero Trust Login: renuka from 127.0.0.1
+2026-04-28 22:21:37.924936 - MOVER EVENT: User attributes updated for renuka by renuka

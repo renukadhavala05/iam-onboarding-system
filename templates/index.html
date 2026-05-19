@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero Trust - Register Your Identity</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-page">
+
+<div class="card auth-card">
+    <div class="header">
+        <h1>Onboard Identity</h1>
+        <p>Register to join the Zero Trust secure ecosystem.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <form action="/register" method="POST">
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" class="form-input" placeholder="Enter your full name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="username">Preferred Username</label>
+            <input type="text" id="username" name="username" class="form-input" placeholder="e.g. jdoe.it" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" class="form-input" placeholder="name@company.com" required>
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label for="phone">Phone Number</label>
+                <input type="text" id="phone" name="phone" class="form-input" placeholder="+123..." required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="employee_id">Employee ID</label>
+                <input type="text" id="employee_id" name="employee_id" class="form-input" placeholder="ID-001" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="department">Department</label>
+            <input type="text" id="department" name="department" class="form-input" placeholder="IT, HR, Security..." required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Security Password</label>
+            <input type="password" id="password" name="password" class="form-input" placeholder="Set a strong password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">Generate Secure Identity</button>
+
+        <div style="margin-top: 24px; text-align: center; color: var(--text-muted); font-size: 0.875rem;">
+            Already have an identity? <a href="/login" style="color: var(--primary); font-weight: 500;">Access System →</a>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

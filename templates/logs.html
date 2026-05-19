@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs - Zero Trust</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar (Same as dashboard) -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div style="background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">ZT</div>
+            IAM SYSTEM
+        </div>
+        
+        <ul class="nav-links">
+            <li><a href="{{ url_for('user.dashboard') }}" class="nav-item"><span>👤</span> Profile Overview</a></li>
+            {% if session['role'] == 'Admin' %}
+            <li style="margin-top: 20px; font-size: 0.75rem; color: var(--text-muted); padding: 0 16px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Admin Space</li>
+            <li><a href="{{ url_for('admin.dashboard') }}" class="nav-item"><span>👥</span> Identity Management</a></li>
+            <li><a href="{{ url_for('admin.logs') }}" class="nav-item active"><span>📋</span> Audit Logs</a></li>
+            {% endif %}
+        </ul>
+
+        <div class="nav-footer">
+            <a href="{{ url_for('auth.logout') }}" class="nav-item" style="color: var(--error);"><span>🚪</span> Sign Out</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="header">
+            <h1>System Audit Logs</h1>
+            <p>Complete historical record of all Zero Trust verification attempts and identity changes.</p>
+        </div>
+
+        <div class="card">
+            <div style="max-height: 600px; overflow-y: auto; font-family: 'Courier New', Courier, monospace; font-size: 0.875rem; background: #1e293b; color: #e2e8f0; padding: 20px; border-radius: 8px;">
+                {% for log in logs %}
+                    <div style="margin-bottom: 8px; border-bottom: 1px solid #334155; padding-bottom: 4px;">
+                        <span style="color: #94a3b8;">{{ log.split(' - ')[0] if ' - ' in log else '' }}</span>
+                        <span style="color: #38bdf8; font-weight: 700;">[LOG]</span>
+                        <span>{{ log.split(' - ')[1] if ' - ' in log else log }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

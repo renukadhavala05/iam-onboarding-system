@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IAM Dashboard - Zero Trust</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div style="background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">ZT</div>
+            IAM SYSTEM
+        </div>
+        
+        <ul class="nav-links">
+            <li>
+                <a href="{{ url_for('user.dashboard') }}" class="nav-item {{ 'active' if active_tab == 'profile' else '' }}">
+                    <span>👤</span> Profile Overview
+                </a>
+            </li>
+            
+            {% if session['role'] == 'Admin' %}
+            <li style="margin-top: 20px; font-size: 0.75rem; color: var(--text-muted); padding: 0 16px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Admin Space</li>
+            <li>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item {{ 'active' if active_tab == 'admin' else '' }}">
+                    <span>👥</span> Identity Management
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin.logs') }}" class="nav-item {{ 'active' if active_tab == 'logs' else '' }}">
+                    <span>📋</span> Audit Logs
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="nav-footer">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                    {{ session['user'][0]|upper }}
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; font-weight: 600;">{{ session['user'] }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ session['role'] }}</div>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="nav-item" style="color: var(--error);">
+                <span>🚪</span> Sign Out
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        {% if active_tab == 'profile' %}
+            <div class="header">
+                <h1>Welcome Back, {{ user.name }}</h1>
+                <p>Monitor your identity status and system access security.</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Security Role</div>
+                    <div class="stat-value" style="color: var(--primary);">{{ user.role }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Verified IP</div>
+                    <div class="stat-value">{{ session['ip'] }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Identity ID</div>
+                    <div class="stat-value">#{{ user.employee_id }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Logins</div>
+                    <div class="stat-value" style="color: var(--success);">{{ user.login_count }}</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Identity Profile Details</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Full Name</p>
+                        <p style="font-weight: 500;">{{ user.name }}</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Department</p>
+                        <p style="font-weight: 500;">{{ user.department }}</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Email ID</p>
+                        <p style="font-weight: 500;">{{ user.email }}</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Recovery Phone</p>
+                        <p style="font-weight: 500;">{{ user.phone }}</p>
+                    </div>
+                </div>
+
+                {% if session['role'] == 'Admin' %}
+                <div style="margin-top: 32px; padding-top: 24px; border-top: 1px dashed var(--border);">
+                    <div style="background: var(--primary-light); padding: 16px; border-radius: var(--radius); display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <p style="font-weight: 700; color: var(--primary); margin-bottom: 4px;">Administrative Privileges Detected</p>
+                            <p style="font-size: 0.825rem; color: var(--text-muted);">You have full access to the organizational Zero Trust console.</p>
+                        </div>
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">Go to Identity Control Panel →</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card" style="margin-top: 24px;">
+                <h3 style="margin-bottom: 20px;">Recent Security Activity</h3>
+                <div class="activity-feed" style="display: flex; flex-direction: column; gap: 8px;">
+                    {% for activity in recent_activity %}
+                    <div style="padding: 12px; border-left: 3px solid var(--primary); background: var(--bg-color); border-radius: 0 8px 8px 0; font-size: 0.825rem; font-family: monospace;">
+                        {{ activity }}
+                    </div>
+                    {% else %}
+                    <p style="color: var(--text-muted); font-size: 0.875rem;">No recent activities logged.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+        {% elif active_tab == 'admin' %}
+            <div class="header">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <h1>Admin Lifecycle Console</h1>
+                        <p>Manage the Joiner–Mover–Leaver (JML) lifecycle with Zero Trust oversight.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="document.getElementById('onboardModal').style.display='flex'">+ Onboard New Identity</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Identities</div>
+                    <div class="stat-value" style="color: var(--primary);">{{ total_users }}</div>
+                    <div class="stat-trend">Organizational Joiners</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Access</div>
+                    <div class="stat-value" style="color: var(--success);">{{ active_users }}</div>
+                    <div class="stat-trend">Verified Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Suspended/Locked</div>
+                    <div class="stat-value" style="color: var(--error);">{{ locked_users }}</div>
+                    <div class="stat-trend">Security Revocations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Admin Privileged</div>
+                    <div class="stat-value" style="color: var(--accent);">{{ admin_users }}</div>
+                    <div class="stat-trend">Trusted Authority</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">System Audits</div>
+                    <div class="stat-value" style="color: var(--warning);">{{ total_logins }}</div>
+                    <div class="stat-trend">Continuous Monitoring</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h3 style="margin: 0;">Identity Control Panel (JML Lifecycle)</h3>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <a href="{{ url_for('admin.export_users') }}" class="btn" style="background: var(--bg-main); border: 1px solid var(--border); font-size: 0.825rem; padding: 8px 16px;">📥 Export Identity CSV</a>
+                        <div style="font-size: 0.825rem; color: var(--text-muted); padding: 4px 12px; border-radius: 20px; background: var(--bg-color); border: 1px solid var(--border-color);">
+                            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); margin-right: 6px;"></span>
+                            Administrative Priority Mode
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email Identity</th>
+                                <th>Access Role</th>
+                                <th>Operational Status</th>
+                                <th>Action Control Center</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 32px; height: 32px; background: {{ 'var(--primary-light)' if u.role == 'Admin' else '#f1f5f9' }}; color: {{ 'var(--primary)' if u.role == 'Admin' else 'var(--text-muted)' }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">
+                                            {{ u.username[:1]|upper }}
+                                        </div>
+                                        <div style="font-weight: 600;">{{ u.username }}</div>
+                                    </div>
+                                </td>
+                                <td>{{ u.email }}</td>
+                                <td>
+                                    <form action="{{ url_for('admin.update_role') }}" method="POST" style="display: flex; align-items: center; gap: 6px;">
+                                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                                        <select name="role" onchange="this.form.submit()" style="font-size: 0.75rem; padding: 4px; border-radius: 4px; border: 1px solid var(--border); background: white;">
+                                            <option value="User" {{ 'selected' if u.role == 'User' else '' }}>User</option>
+                                            <option value="Admin" {{ 'selected' if u.role == 'Admin' else '' }}>Admin</option>
+                                        </select>
+                                    </form>
+                                </td>
+                                <td>
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        {% if u.is_locked %}
+                                            <span class="badge badge-error" style="width: fit-content;">SECURITY LOCKED</span>
+                                        {% elif not u.is_active %}
+                                            <span class="badge" style="width: fit-content; background: #94a3b8; color: white;">DEACTIVATED</span>
+                                        {% else %}
+                                            <span class="badge badge-success" style="width: fit-content;">ACTIVE / TRUSTED</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 8px;">
+                                        <a href="{{ url_for('admin.view_user', user_id=u.id) }}" class="btn-icon" title="View Detailed Profile" style="background: var(--primary-light); color: var(--primary);">
+                                            👁️
+                                        </a>
+                                        <button class="btn-icon" title="Edit Identity Attributes" style="background: var(--primary-light); color: var(--accent);" 
+                                                onclick="openEditModal('{{ u.id }}', '{{ u.name }}', '{{ u.email }}', '{{ u.department }}', '{{ u.employee_id }}')">
+                                            ✏️
+                                        </button>
+                                        <a href="{{ url_for('admin.toggle_lock', user_id=u.id) }}" class="btn-icon" title="{{ 'Unlock Security' if u.is_locked else 'Lock Security' }}" style="background: {{ 'var(--success)' if u.is_locked else 'var(--warning)' }}; color: white;">
+                                            {{ '🔓' if u.is_locked else '🔒' }}
+                                        </a>
+                                        <a href="{{ url_for('admin.toggle_active', user_id=u.id) }}" class="btn-icon" title="{{ 'Activate' if not u.is_active else 'Deactivate' }}" style="background: {{ 'var(--success)' if not u.is_active else '#64748b' }}; color: white;">
+                                            {{ '🔌' if not u.is_active else '💤' }}
+                                        </a>
+                                        <a href="{{ url_for('admin.delete_user', user_id=u.id) }}" class="btn-icon" title="Delete Permanently" onclick="return confirm('Ensure leaver process is complete?')" style="background: var(--error); color: white;">
+                                            🗑️
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Edit Modal -->
+            <div id="editModal" class="modal-overlay">
+                <div class="modal-content card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2 style="margin: 0;">Edit Identity Attributes (Mover)</h2>
+                        <button onclick="document.getElementById('editModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                    </div>
+                    <form action="{{ url_for('admin.edit_user') }}" method="POST">
+                        <input type="hidden" name="user_id" id="edit_user_id">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" name="name" id="edit_name" required class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" name="email" id="edit_email" required class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Employee ID</label>
+                                <input type="text" name="employee_id" id="edit_employee_id" required class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Department</label>
+                                <input type="text" name="department" id="edit_department" required class="form-input">
+                            </div>
+                        </div>
+                        <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                            <button type="button" class="btn" onclick="document.getElementById('editModal').style.display='none'">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Attribute Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Onboard Modal -->
+            <div id="onboardModal" class="modal-overlay">
+                <div class="modal-content card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2 style="margin: 0;">Onboard New Identity (Joiner)</h2>
+                        <button onclick="document.getElementById('onboardModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                    </div>
+                    <form action="{{ url_for('admin.onboard_user') }}" method="POST">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" name="name" required placeholder="John Doe" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" name="username" required placeholder="jdoe" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" name="email" required placeholder="john@org.com" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Employee ID</label>
+                                <input type="text" name="employee_id" required placeholder="EMP-1001" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Department</label>
+                                <input type="text" name="department" required placeholder="Cybersecurity" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Initial Role</label>
+                                <select name="role" class="form-input" style="width: 100%;">
+                                    <option value="User">User (Least Privilege)</option>
+                                    <option value="Admin">Admin (Privileged Access)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-top: 24px; padding: 12px; background: #fef9c3; border-radius: 8px; font-size: 0.825rem; color: #854d0e; border: 1px solid #fde047;">
+                            <strong>Note:</strong> Onboarding will generate a unique MFA seed. Default password is 'DefaultPassword123' (Reset required on first login).
+                        </div>
+                        <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                            <button type="button" class="btn" onclick="document.getElementById('onboardModal').style.display='none'">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Complete Onboarding</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+                function openEditModal(id, name, email, dept, empId) {
+                    document.getElementById('edit_user_id').value = id;
+                    document.getElementById('edit_name').value = name;
+                    document.getElementById('edit_email').value = email;
+                    document.getElementById('edit_department').value = dept;
+                    document.getElementById('edit_employee_id').value = empId;
+                    document.getElementById('editModal').style.display = 'flex';
+                }
+            </script>
+
+            <style>
+                .modal-overlay {
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.5);
+                    backdrop-filter: blur(4px);
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1000;
+                    padding: 20px;
+                }
+                .modal-content {
+                    width: 100%;
+                    max-width: 600px;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                }
+                .btn-icon {
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 6px;
+                    text-decoration: none;
+                    transition: transform 0.2s;
+                }
+                .btn-icon:hover { transform: scale(1.1); }
+                .stat-trend { font-size: 0.7rem; opacity: 0.7; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+            </style>
+        {% endif %}
+    </main>
+</div>
+
+</body>
+</html>

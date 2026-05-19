@@ -1,7 +1,0 @@
-{
-  "Developer": ["Code Repository", "Server Access"],
-  "HR": ["Employee Records"],
-  "Finance": ["Billing System"],
-  "Intern": ["Read Only Access"]
-}
-

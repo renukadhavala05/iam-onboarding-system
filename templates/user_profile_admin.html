@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Detail - IAM Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div style="background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">ZT</div>
+            IAM SYSTEM
+        </div>
+        
+        <ul class="nav-links">
+            <li><a href="{{ url_for('admin.dashboard') }}" class="nav-item"><span>⬅️</span> Back to Control Panel</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>Identity Dossier: {{ target_user.username }}</h1>
+            <p>Full administrative oversight for organizational identity.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+            <div class="card">
+                <h3>Identity Attributes</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div>
+                        <label class="stat-label">Full Name</label>
+                        <p style="font-weight: 500;">{{ target_user.name }}</p>
+                    </div>
+                    <div>
+                        <label class="stat-label">Email Address</label>
+                        <p style="font-weight: 500;">{{ target_user.email }}</p>
+                    </div>
+                    <div>
+                        <label class="stat-label">Employee ID</label>
+                        <p style="font-weight: 500;">{{ target_user.employee_id }}</p>
+                    </div>
+                    <div>
+                        <label class="stat-label">Department</label>
+                        <p style="font-weight: 500;">{{ target_user.department }}</p>
+                    </div>
+                    <div>
+                        <label class="stat-label">Current Role</label>
+                        <span class="badge badge-primary">{{ target_user.role }}</span>
+                    </div>
+                    <div>
+                        <label class="stat-label">Account Lifecycle</label>
+                        <p style="font-weight: 500; color: {{ 'var(--success)' if target_user.is_active else 'var(--error)' }};">
+                            {{ 'ACTIVE / ENABLED' if target_user.is_active else 'DEACTIVATED / DISABLED' }}
+                        </p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px;">
+                    <h3>Lifecycle Controls (Admin)</h3>
+                    <div style="display: flex; gap: 12px; margin-top: 20px;">
+                        <a href="{{ url_for('admin.toggle_active', user_id=target_user.id) }}" class="btn" style="background: {{ 'var(--error)' if target_user.is_active else 'var(--success)' }}; color: white;">
+                            {{ 'Deactivate User (Leaver)' if target_user.is_active else 'Activate User (Joiner)' }}
+                        </a>
+                        <a href="{{ url_for('admin.toggle_lock', user_id=target_user.id) }}" class="btn" style="background: var(--warning); color: white;">
+                            {{ 'Lock Account (Security)' if not target_user.is_locked else 'Unlock Account' }}
+                        </a>
+                        <a href="{{ url_for('admin.delete_user', user_id=target_user.id) }}" class="btn" onclick="return confirm('PERMANENT DELETION: Are you sure?')" style="background: var(--error); color: white;">
+                            Delete Identity Permanently
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Security Context</h3>
+                <div style="margin-top: 20px;">
+                    <div class="stat-card" style="margin-bottom: 16px;">
+                        <div class="stat-label">Login Count</div>
+                        <div class="stat-value">{{ target_user.login_count }}</div>
+                    </div>
+                    <div class="stat-card" style="margin-bottom: 16px;">
+                        <div class="stat-label">Failed Attempts</div>
+                        <div class="stat-value" style="color: {{ 'var(--error)' if target_user.failed_attempts > 0 else 'var(--text-muted)' }};">{{ target_user.failed_attempts }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Last Known IP</div>
+                        <div class="stat-value" style="font-size: 1rem;">{{ target_user.last_login_ip or 'N/A' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 24px;">
+            <h3>Recent Audit Stream</h3>
+            <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+                {% for log in user_logs %}
+                <div style="padding: 12px; border-left: 3px solid var(--primary); background: var(--bg-main); border-radius: 0 8px 8px 0; font-family: monospace; font-size: 0.825rem;">
+                    {{ log }}
+                </div>
+                {% else %}
+                <p style="color: var(--text-muted);">No recorded activity for this identity.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

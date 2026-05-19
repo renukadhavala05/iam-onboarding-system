@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Verification</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-page">
+
+<div class="card auth-card">
+    <div class="header">
+        <h1>Two-Factor Auth</h1>
+        <p>Your identity requires multi-factor verification.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div style="background: var(--primary-light); padding: 20px; border-radius: var(--radius); margin-bottom: 24px; border: 1px solid var(--primary-border); text-align: center;">
+        <p style="font-size: 0.875rem; color: var(--primary); font-weight: 600; margin-bottom: 12px;">Scan to Connect App</p>
+        
+        <div style="margin-bottom: 15px; display: inline-block; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="MFA QR Code" style="display: block; max-width: 100%; height: auto;">
+        </div>
+
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">Or enter code manually:</p>
+        <div style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--primary); font-size: 0.95rem; letter-spacing: 1px; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 4px; word-break: break-all;">
+            {{ otp_secret }}
+        </div>
+    </div>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="otp">Enter 6-Digit Authenticator Code</label>
+            <input type="text" id="otp" name="otp" class="form-input" placeholder="000 000" maxlength="6" required autofocus style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; font-weight: 700;">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">Verify & Access System</button>
+
+        <div style="margin-top: 24px; text-align: center; color: var(--text-muted); font-size: 0.875rem;">
+            Lost your device? <a href="#" style="color: var(--primary); font-weight: 500;">Contact IT Support</a>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>
