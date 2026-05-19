@@ -1,26 +1,24 @@
 # IAM Automated User Onboarding System
 
-This is a mini IAM (Identity and Access Management) simulation project built using Python.
+A Flask-based Identity and Access Management (IAM) system designed to simulate secure enterprise user onboarding workflows with Role-Based Access Control (RBAC), authentication, and activity logging.
 
 ## Features
 - Automated user onboarding
-- Role-based access control (RBAC)
+- Role-Based Access Control (RBAC)
+- JWT-based authentication
 - Permission assignment
-- Activity logging
+- Activity and audit logging
+- Admin dashboard for user and role management
 
 ## Technologies Used
 - Python
-- JSON (for data storage)
+- Flask
+- JSON / SQLite
+- JWT Authentication
 
 ## How to Run
-1. Open terminal in project folder
-2. Run:
-   python onboarding.py
-
-3. Enter employee details when prompted.
-
-## Example Roles
-- Developer
-- HR
-- Finance
-- Intern
+1. Clone the repository
+2. Open terminal in the project folder
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
