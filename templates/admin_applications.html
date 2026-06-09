@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Catalog Control - Admin Console</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div style="background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">ZT</div>
+            IAM SYSTEM
+        </div>
+        
+        <ul class="nav-links">
+            <li>
+                <a href="{{ url_for('user.dashboard') }}" class="nav-item {{ 'active' if active_tab == 'profile' else '' }}">
+                    <span>👤</span> Profile Overview
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.applications') }}" class="nav-item {{ 'active' if active_tab == 'applications' else '' }}">
+                    <span>🔌</span> App Workspace
+                </a>
+            </li>
+            
+            {% if session['role'] == 'Admin' %}
+            <li style="margin-top: 20px; font-size: 0.75rem; color: var(--text-muted); padding: 0 16px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Admin Space</li>
+            <li>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item {{ 'active' if active_tab == 'admin' else '' }}">
+                    <span>👥</span> Identity Management
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.admin_apps') }}" class="nav-item {{ 'active' if active_tab == 'admin_apps' else '' }}">
+                    <span>🛡️</span> Application Control
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.admin_requests') }}" class="nav-item {{ 'active' if active_tab == 'admin_requests' else '' }}">
+                    <span>📩</span> Access Requests
+                    {% if pending_requests_count and pending_requests_count > 0 %}
+                    <span class="badge badge-error" style="margin-left: auto; padding: 2px 6px; font-size: 0.7rem;">{{ pending_requests_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin.logs') }}" class="nav-item {{ 'active' if active_tab == 'logs' else '' }}">
+                    <span>📋</span> Audit Logs
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="nav-footer">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                    {{ session['user'][0]|upper }}
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; font-weight: 600;">{{ session['user'] }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ session['role'] }}</div>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="nav-item" style="color: var(--error);">
+                <span>🚪</span> Sign Out
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <h1>Application Catalog Control</h1>
+                    <p>Register, update, and manage accessibility profiles for corporate resources.</p>
+                </div>
+                <button class="btn btn-primary" onclick="document.getElementById('addAppModal').style.display='flex'">+ Register New App</button>
+            </div>
+        </div>
+
+        <!-- Catalog List -->
+        <div class="card">
+            <h3 style="margin-bottom: 24px;">Enterprise Application Directory</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>Category</th>
+                            <th>Visible To</th>
+                            <th>Description</th>
+                            <th>Active Users</th>
+                            <th>Status</th>
+                            <th>Actions Control</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in all_apps %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 36px; height: 36px; background: var(--primary-light); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                                        {{ app.icon or '🔌' }}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 700;">{{ app.name }}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ app.url }}">
+                                            {{ app.url }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-primary">{{ app.category or 'General' }}</span>
+                            </td>
+                            <td style="font-size: 0.825rem; color: var(--text-main);">
+                                {{ app.normalized_allowed_roles() or 'User,Admin' }}
+                            </td>
+                            <td style="font-size: 0.825rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ app.description }}">
+                                {{ app.description or 'No description provided.' }}
+                            </td>
+                            <td style="font-weight: 600; text-align: center;">
+                                {{ app_stats[app.id] or 0 }}
+                            </td>
+                            <td>
+                                {% if app.is_active %}
+                                    <span class="badge badge-success">CATALOG ACTIVE</span>
+                                {% else %}
+                                    <span class="badge" style="background: #94a3b8; color: white;">DISABLED</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn-icon" title="Edit App Details" style="background: var(--primary-light); color: var(--accent);"
+                                            onclick="openEditAppModal('{{ app.id }}', '{{ app.name }}', '{{ app.category }}', '{{ app.url }}', '{{ app.icon }}', '{{ app.description }}', '{{ app.normalized_allowed_roles() }}')">
+                                        ✏️
+                                    </button>
+                                    
+                                    <form action="{{ url_for('app_access.admin_applications_toggle', app_id=app.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn-icon" title="{{ 'Deactivate Application' if app.is_active else 'Activate Application' }}" 
+                                                style="background: {{ 'var(--warning)' if app.is_active else 'var(--success)' }}; color: white;">
+                                            {{ '🔌' if app.is_active else '💤' }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">No applications registered.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Add Application Modal -->
+<div id="addAppModal" class="modal-overlay">
+    <div class="modal-content card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="margin: 0;">Register New Application</h2>
+            <button onclick="document.getElementById('addAppModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form action="{{ url_for('app_access.admin_applications_add') }}" method="POST">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label>Application Name</label>
+                    <input type="text" name="name" required placeholder="e.g. Figma Workspace" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" name="category" placeholder="e.g. Design Tools" class="form-input">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>Launch/Redirect URL</label>
+                    <input type="url" name="url" required placeholder="https://figma.com/files" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Emoji Icon</label>
+                    <input type="text" name="icon" placeholder="e.g. 🎨" maxlength="10" class="form-input">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" rows="3" placeholder="Describe the purpose of this application..." class="form-input" style="resize: vertical; font-family: inherit;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Allowed Roles</label>
+                <input type="text" name="allowed_roles" placeholder="Admin,User" class="form-input">
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">Comma-separated roles that can see and request this app.</p>
+            </div>
+            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="document.getElementById('addAppModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Application</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Application Modal -->
+<div id="editAppModal" class="modal-overlay">
+    <div class="modal-content card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="margin: 0;">Edit Application Profile</h2>
+            <button onclick="document.getElementById('editAppModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form action="{{ url_for('app_access.admin_applications_edit') }}" method="POST">
+            <input type="hidden" name="app_id" id="edit_app_id">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label>Application Name</label>
+                    <input type="text" name="name" id="edit_name" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" name="category" id="edit_category" class="form-input">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>Launch/Redirect URL</label>
+                    <input type="url" name="url" id="edit_url" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Emoji Icon</label>
+                    <input type="text" name="icon" id="edit_icon" maxlength="10" class="form-input">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" id="edit_description" rows="3" class="form-input" style="resize: vertical; font-family: inherit;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Allowed Roles</label>
+                <input type="text" name="allowed_roles" id="edit_allowed_roles" placeholder="Admin,User" class="form-input">
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">Comma-separated roles that can see and request this app.</p>
+            </div>
+            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="document.getElementById('editAppModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditAppModal(id, name, category, url, icon, desc, allowedRoles) {
+        document.getElementById('edit_app_id').value = id;
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_category').value = category;
+        document.getElementById('edit_url').value = url;
+        document.getElementById('edit_icon').value = icon;
+        document.getElementById('edit_description').value = desc;
+        document.getElementById('edit_allowed_roles').value = allowedRoles;
+        document.getElementById('editAppModal').style.display = 'flex';
+    }
+</script>
+
+<style>
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: transform 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-icon:hover { transform: scale(1.1); }
+</style>
+
+</body>
+</html>

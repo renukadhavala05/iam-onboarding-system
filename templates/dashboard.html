@@ -22,12 +22,30 @@
                     <span>👤</span> Profile Overview
                 </a>
             </li>
+            <li>
+                <a href="{{ url_for('app_access.applications') }}" class="nav-item {{ 'active' if active_tab == 'applications' else '' }}">
+                    <span>🔌</span> App Workspace
+                </a>
+            </li>
             
             {% if session['role'] == 'Admin' %}
             <li style="margin-top: 20px; font-size: 0.75rem; color: var(--text-muted); padding: 0 16px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Admin Space</li>
             <li>
                 <a href="{{ url_for('admin.dashboard') }}" class="nav-item {{ 'active' if active_tab == 'admin' else '' }}">
                     <span>👥</span> Identity Management
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.admin_apps') }}" class="nav-item {{ 'active' if active_tab == 'admin_apps' else '' }}">
+                    <span>🛡️</span> Application Control
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.admin_requests') }}" class="nav-item {{ 'active' if active_tab == 'admin_requests' else '' }}">
+                    <span>📩</span> Access Requests
+                    {% if pending_requests_count and pending_requests_count > 0 %}
+                    <span class="badge badge-error" style="margin-left: auto; padding: 2px 6px; font-size: 0.7rem;">{{ pending_requests_count }}</span>
+                    {% endif %}
                 </a>
             </li>
             <li>
@@ -165,6 +183,21 @@
                     <div class="stat-label">Admin Privileged</div>
                     <div class="stat-value" style="color: var(--accent);">{{ admin_users }}</div>
                     <div class="stat-trend">Trusted Authority</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pending Reviews</div>
+                    <div class="stat-value" style="color: var(--warning);">{{ pending_requests }}</div>
+                    <div class="stat-trend">Access approvals awaiting action</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Expiring Access</div>
+                    <div class="stat-value" style="color: var(--error);">{{ expiring_soon }}</div>
+                    <div class="stat-trend">Approvals expiring in 7 days</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Direct Assignments</div>
+                    <div class="stat-value" style="color: var(--accent);">{{ direct_assignments }}</div>
+                    <div class="stat-trend">Admin-issued app grants</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">System Audits</div>

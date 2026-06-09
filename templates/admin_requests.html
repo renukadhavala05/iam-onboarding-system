@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Request Queue - Admin Console</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div style="background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">ZT</div>
+            IAM SYSTEM
+        </div>
+        
+        <ul class="nav-links">
+            <li>
+                <a href="{{ url_for('user.dashboard') }}" class="nav-item {{ 'active' if active_tab == 'profile' else '' }}">
+                    <span>👤</span> Profile Overview
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.applications') }}" class="nav-item {{ 'active' if active_tab == 'applications' else '' }}">
+                    <span>🔌</span> App Workspace
+                </a>
+            </li>
+            
+            {% if session['role'] == 'Admin' %}
+            <li style="margin-top: 20px; font-size: 0.75rem; color: var(--text-muted); padding: 0 16px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Admin Space</li>
+            <li>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item {{ 'active' if active_tab == 'admin' else '' }}">
+                    <span>👥</span> Identity Management
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.admin_apps') }}" class="nav-item {{ 'active' if active_tab == 'admin_apps' else '' }}">
+                    <span>🛡️</span> Application Control
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.admin_requests') }}" class="nav-item {{ 'active' if active_tab == 'admin_requests' else '' }}">
+                    <span>📩</span> Access Requests
+                    {% if pending_requests_count and pending_requests_count > 0 %}
+                    <span class="badge badge-error" style="margin-left: auto; padding: 2px 6px; font-size: 0.7rem;">{{ pending_requests_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin.logs') }}" class="nav-item {{ 'active' if active_tab == 'logs' else '' }}">
+                    <span>📋</span> Audit Logs
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="nav-footer">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                    {{ session['user'][0]|upper }}
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; font-weight: 600;">{{ session['user'] }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ session['role'] }}</div>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="nav-item" style="color: var(--error);">
+                <span>🚪</span> Sign Out
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="header">
+            <h1>Access Request Queue</h1>
+            <p>Review and act on pending application access requests from organizational users.</p>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 24px;">Pending Access Reviews (Zero Trust Verification)</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Requester</th>
+                            <th>Department</th>
+                            <th>Application</th>
+                            <th>Category</th>
+                            <th>Request Date</th>
+                            <th>Action Review</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in pending_requests %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 32px; height: 32px; background: #e2e8f0; color: var(--text-main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">
+                                        {{ req.user.username[:1]|upper }}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600;">{{ req.user.name }}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">@{{ req.user.username }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="font-size: 0.875rem; font-weight: 500;">
+                                {{ req.user.department or 'N/A' }}
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 1.15rem;">{{ req.application.icon or '🔌' }}</span>
+                                    <span style="font-weight: 600;">{{ req.application.name }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-primary" style="font-size: 0.7rem;">{{ req.application.category or 'General' }}</span>
+                            </td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">
+                                {{ req.requested_at[:19] }}
+                            </td>
+                            <td>
+                                <button class="btn btn-primary" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 6px;"
+                                        onclick="openReviewModal('{{ req.id }}', '{{ req.user.username }} ({{ req.user.name }})', '{{ req.application.name }}', '{{ req.reason }}')">
+                                    Review Request 🔍
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">🎉</div>
+                                <h4 style="color: var(--text-main); margin-bottom: 4px;">All Caught Up!</h4>
+                                <p style="font-size: 0.875rem;">There are no pending application access requests requiring review.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Review Request Modal -->
+<div id="reviewModal" class="modal-overlay">
+    <div class="modal-content card" style="max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="margin: 0;">Access Request Review</h2>
+            <button onclick="document.getElementById('reviewModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form id="reviewForm" method="POST">
+            <input type="hidden" id="review_request_id">
+            
+            <div style="background: var(--bg-main); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 20px;">
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Requester Identity</div>
+                    <div id="review_user" style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">John Doe</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Requested Application</div>
+                    <div id="review_app" style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">AWS Console</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Business Justification</div>
+                    <div id="review_justification" style="font-size: 0.875rem; color: var(--text-main); margin-top: 4px; font-style: italic; line-height: 1.4;">Need it for deploying modules.</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="review_comments" style="font-weight: 600;">Reviewer Comments / Decision Reason</label>
+                <textarea id="review_comments" name="comments" rows="3" class="form-input" 
+                          placeholder="Provide approval comments or rejection details here..." style="resize: vertical; font-family: inherit;"></textarea>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">* Note: Comments are <strong>mandatory</strong> if rejecting access.</div>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="document.getElementById('reviewModal').style.display='none'">Cancel</button>
+                <button type="button" class="btn" style="background: var(--error); color: white;" onclick="submitReview('reject')">Reject Access ❌</button>
+                <button type="button" class="btn btn-primary" onclick="submitReview('approve')">Approve Access ✔️</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openReviewModal(requestId, userStr, appStr, reasonStr) {
+        document.getElementById('review_request_id').value = requestId;
+        document.getElementById('review_user').innerText = userStr;
+        document.getElementById('review_app').innerText = appStr;
+        document.getElementById('review_justification').innerText = reasonStr;
+        document.getElementById('review_comments').value = '';
+        document.getElementById('reviewModal').style.display = 'flex';
+    }
+
+    function submitReview(actionType) {
+        var requestId = document.getElementById('review_request_id').value;
+        var comments = document.getElementById('review_comments').value.trim();
+        var form = document.getElementById('reviewForm');
+
+        if (actionType === 'reject' && !comments) {
+            alert("Please provide reviewer comments explaining the reason for rejection.");
+            return;
+        }
+
+        form.action = "/admin/request/" + actionType + "/" + requestId;
+        form.submit();
+    }
+</script>
+
+</body>
+</html>

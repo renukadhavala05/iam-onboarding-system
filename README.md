@@ -23,12 +23,21 @@ A Flask-based Identity and Access Management (IAM) system designed to simulate s
 3. Install dependencies:
    ```bash
    pip install -r requirements.txt
-````
+   ```
 
-4. Run the application:
-
+4. Erase/Initialize the database (optional):
    ```bash
-   python onboarding.py
+   flask init-db
+   ```
+
+5. Reset audit logs (optional):
+   ```bash
+   flask reset-logs
+   ```
+
+6. Run the application:
+   ```bash
+   python app.py
    ```
 
 ## Example Roles

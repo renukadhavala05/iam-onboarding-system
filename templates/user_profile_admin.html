@@ -17,8 +17,62 @@
         </div>
         
         <ul class="nav-links">
-            <li><a href="{{ url_for('admin.dashboard') }}" class="nav-item"><span>⬅️</span> Back to Control Panel</a></li>
+            <li>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item" style="font-weight: bold; border-bottom: 1px dashed var(--border); border-radius: 0; padding-bottom: 16px; margin-bottom: 12px;">
+                    <span>⬅️</span> Control Panel
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('user.dashboard') }}" class="nav-item">
+                    <span>👤</span> Profile Overview
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.applications') }}" class="nav-item">
+                    <span>🔌</span> App Workspace
+                </a>
+            </li>
+            
+            <li style="margin-top: 20px; font-size: 0.75rem; color: var(--text-muted); padding: 0 16px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Admin Space</li>
+            <li>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item active">
+                    <span>👥</span> Identity Management
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.admin_apps') }}" class="nav-item">
+                    <span>🛡️</span> Application Control
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.admin_requests') }}" class="nav-item">
+                    <span>📩</span> Access Requests
+                    {% if pending_requests_count and pending_requests_count > 0 %}
+                    <span class="badge badge-error" style="margin-left: auto; padding: 2px 6px; font-size: 0.7rem;">{{ pending_requests_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin.logs') }}" class="nav-item">
+                    <span>📋</span> Audit Logs
+                </a>
+            </li>
         </ul>
+
+        <div class="nav-footer">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                    {{ session['user'][0]|upper }}
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; font-weight: 600;">{{ session['user'] }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ session['role'] }}</div>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="nav-item" style="color: var(--error);">
+                <span>🚪</span> Sign Out
+            </a>
+        </div>
     </aside>
 
     <main class="main-content">
@@ -94,6 +148,149 @@
             </div>
         </div>
 
+        <!-- App Access Management for this User -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+            <!-- Active Authorized Apps -->
+            <div class="card" style="margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">Resource Access Permissions</h3>
+                    <span class="badge badge-success" style="font-size: 0.8rem; padding: 2px 8px;">{{ user_apps|length }} Apps</span>
+                </div>
+                
+                <div class="table-container">
+                    <table style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Application</th>
+                                <th>Category</th>
+                                <th>Action Control</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in user_apps %}
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 1.2rem;">{{ app.icon or '🔌' }}</span>
+                                        <span style="font-weight: 600;">{{ app.name }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-primary" style="font-size: 0.7rem;">{{ app.category or 'General' }}</span>
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('app_access.admin_request_revoke', user_id=target_user.id, app_id=app.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Revoke user access to {{ app.name }}?')">
+                                        <input type="hidden" name="comments" value="Access revoked by Administrator.">
+                                        <button type="submit" class="btn" style="background: var(--error); color: white; padding: 6px 12px; font-size: 0.75rem; border-radius: 6px;">
+                                            Revoke Access 🚫
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 16px; font-size: 0.875rem;">No active resource authorizations.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Direct Assignment -->
+            <div class="card" style="margin-bottom: 0;">
+                <h3 style="margin-bottom: 20px;">Direct Access Assignment</h3>
+                <p style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 20px;">
+                    Grant access immediately bypassing the standard request-approval workflow.
+                </p>
+                
+                {% if available_apps %}
+                <form action="{{ url_for('app_access.admin_request_grant', user_id=target_user.id) }}" method="POST" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                        <label for="app_select">Select Application</label>
+                        <select name="app_id" id="app_select" required class="form-input" style="width: 100%; height: auto; padding: 10px;">
+                            <option value="" disabled selected>-- Select an Application --</option>
+                            {% for app in available_apps %}
+                            <option value="{{ app.id }}">{{ app.icon or '🔌' }} {{ app.name }} ({{ app.category or 'General' }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="align-self: flex-start;">
+                        Grant Access Authorization 🔓
+                    </button>
+                </form>
+                {% else %}
+                <div style="padding: 16px; background: var(--bg-main); border-radius: var(--radius); text-align: center; border: 1px solid var(--border); width: 100%;">
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">This user already holds access to all active directory applications.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Request History dossier -->
+        <div class="card" style="margin-top: 24px;">
+            <h3>Application Access History Dossier</h3>
+            <div class="table-container" style="margin-top: 16px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>Request Date</th>
+                            <th>Justification Reason</th>
+                            <th>Status</th>
+                            <th>Review Info / Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in user_requests %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span>{{ req.application.icon or '🔌' }}</span>
+                                    <span style="font-weight: 600;">{{ req.application.name }}</span>
+                                </div>
+                            </td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">{{ req.requested_at[:19] }}</td>
+                            <td style="font-size: 0.825rem; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ req.reason }}">
+                                {{ req.reason }}
+                            </td>
+                            <td>
+                                {% if req.status == 'Pending' %}
+                                    <span class="badge" style="background: #fef3c7; color: #92400e;">PENDING</span>
+                                {% elif req.status == 'Approved' %}
+                                    <span class="badge badge-success">APPROVED</span>
+                                {% elif req.status == 'Rejected' %}
+                                    <span class="badge badge-error">REJECTED</span>
+                                {% else %}
+                                    <span class="badge" style="background: #f1f5f9; color: #475569;">REVOKED</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size: 0.825rem;">
+                                {% if req.status == 'Pending' %}
+                                    <div style="display: flex; gap: 6px;">
+                                        <form action="{{ url_for('app_access.admin_request_approve', request_id=req.id) }}" method="POST" style="display: inline;">
+                                            <input type="hidden" name="comments" value="Approved directly via User Dossier review.">
+                                            <button type="submit" class="btn" style="background: var(--success); color: white; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; border: none; cursor: pointer;">Approve</button>
+                                        </form>
+                                        <button class="btn" style="background: var(--error); color: white; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; border: none; cursor: pointer;"
+                                                onclick="openDirectReject('{{ req.id }}', '{{ req.application.name }}')">Reject</button>
+                                    </div>
+                                {% else %}
+                                    <div>Reviewed by: <strong>{{ req.reviewed_by }}</strong></div>
+                                    <div style="color: var(--text-muted); font-size: 0.75rem;">{{ req.comments or 'No comment' }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 16px;">No application access history recorded.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="card" style="margin-top: 24px;">
             <h3>Recent Audit Stream</h3>
             <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
@@ -108,6 +305,64 @@
         </div>
     </main>
 </div>
+
+<!-- Direct Reject Modal -->
+<div id="directRejectModal" class="modal-overlay">
+    <div class="modal-content card" style="max-width: 450px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="margin: 0;">Reject Access Request</h2>
+            <button onclick="closeDirectReject()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form id="directRejectForm" method="POST">
+            <div class="form-group">
+                <label>Application</label>
+                <input type="text" id="reject_app_name" readonly class="form-input" style="background: #f1f5f9; font-weight: 600;">
+            </div>
+            <div class="form-group">
+                <label for="reject_comments">Rejection Reason</label>
+                <textarea id="reject_comments" name="comments" required rows="3" class="form-input" placeholder="Explain the reason for denying access..."></textarea>
+            </div>
+            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="closeDirectReject()">Cancel</button>
+                <button type="submit" class="btn" style="background: var(--error); color: white;">Deny Access</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openDirectReject(requestId, appName) {
+        document.getElementById('reject_app_name').value = appName;
+        document.getElementById('directRejectForm').action = "/admin/request/reject/" + requestId;
+        document.getElementById('reject_comments').value = '';
+        document.getElementById('directRejectModal').style.display = 'flex';
+    }
+    
+    function closeDirectReject() {
+        document.getElementById('directRejectModal').style.display = 'none';
+    }
+</script>
+
+<style>
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+    .modal-content {
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+</style>
+
 
 </body>
 </html>

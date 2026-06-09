@@ -104,9 +104,9 @@ def mfa_verify():
 
     if request.method == "POST":
         token = request.form.get("otp")
-        totp = pyotp.TOTP(user.otp_secret, digits=6)
+        totp = pyotp.TOTP(user.otp_secret)
         
-        if totp.verify(token):
+        if totp.verify(token, valid_window=1):
             # Success: Establish or Refresh Secure Session
             verified_at = datetime.datetime.now().timestamp()
             
@@ -140,8 +140,8 @@ def mfa_verify():
             return redirect(url_for("auth.mfa_verify"))
 
     # Generate QR Code for easy setup
-    otp_uri = pyotp.totp.TOTP(user.otp_secret).provisioning_uri(
-        name=user.username, 
+    otp_uri = pyotp.TOTP(user.otp_secret).provisioning_uri(
+        name=user.username,
         issuer_name="ZeroTrustIAM"
     )
     # Auto-adjusting QR Code size

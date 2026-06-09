@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Workspace - Zero Trust</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        .app-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .app-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+        .app-icon-container {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+        .app-category {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .app-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+        .app-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            flex-grow: 1;
+            line-height: 1.4;
+        }
+        .launch-btn {
+            background: var(--primary);
+            color: white;
+            padding: 10px 16px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .launch-btn:hover {
+            background: var(--primary-hover);
+        }
+        .request-btn {
+            background: transparent;
+            border: 1px dashed var(--primary);
+            color: var(--primary);
+            padding: 10px 16px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .request-btn:hover {
+            background: var(--primary-light);
+            border-style: solid;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div style="background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">ZT</div>
+            IAM SYSTEM
+        </div>
+        
+        <ul class="nav-links">
+            <li>
+                <a href="{{ url_for('user.dashboard') }}" class="nav-item {{ 'active' if active_tab == 'profile' else '' }}">
+                    <span>👤</span> Profile Overview
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.applications') }}" class="nav-item {{ 'active' if active_tab == 'applications' else '' }}">
+                    <span>🔌</span> App Workspace
+                </a>
+            </li>
+            
+            {% if session['role'] == 'Admin' %}
+            <li style="margin-top: 20px; font-size: 0.75rem; color: var(--text-muted); padding: 0 16px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Admin Space</li>
+            <li>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item {{ 'active' if active_tab == 'admin' else '' }}">
+                    <span>👥</span> Identity Management
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.admin_apps') }}" class="nav-item {{ 'active' if active_tab == 'admin_apps' else '' }}">
+                    <span>🛡️</span> Application Control
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('app_access.admin_requests') }}" class="nav-item {{ 'active' if active_tab == 'admin_requests' else '' }}">
+                    <span>📩</span> Access Requests
+                    {% if pending_requests_count and pending_requests_count > 0 %}
+                    <span class="badge badge-error" style="margin-left: auto; padding: 2px 6px; font-size: 0.7rem;">{{ pending_requests_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin.logs') }}" class="nav-item {{ 'active' if active_tab == 'logs' else '' }}">
+                    <span>📋</span> Audit Logs
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="nav-footer">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                    {{ session['user'][0]|upper }}
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; font-weight: 600;">{{ session['user'] }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ session['role'] }}</div>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="nav-item" style="color: var(--error);">
+                <span>🚪</span> Sign Out
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="header">
+            <h1>Application Workspace</h1>
+            <p>Access assigned corporate applications through secure Identity Single Sign-On. Requests are submitted to the administrator queue and will appear here once approved.</p>
+        </div>
+
+        <!-- Section 1: My Workspace -->
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span>💼</span> My Applications 
+            <span class="badge badge-primary" style="font-size: 0.8rem; padding: 2px 8px;">{{ my_apps|length }} Active</span>
+        </h2>
+        
+        <div class="app-grid">
+            {% for app in my_apps %}
+            <div class="app-card">
+                <div class="app-icon-container">
+                    {{ app.icon or '🔌' }}
+                </div>
+                <div class="app-category">{{ app.category or 'General' }}</div>
+                <div class="app-title">{{ app.name }}</div>
+                <div class="app-desc">{{ app.description or 'No description provided.' }}</div>
+                <a href="{{ app.url }}" target="_blank" class="launch-btn">
+                    Launch Application 🚀
+                </a>
+            </div>
+            {% else %}
+            <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; border-style: dashed; border-width: 2px;">
+                <p style="font-size: 1.5rem; margin-bottom: 8px;">🌌</p>
+                <h4 style="margin-bottom: 8px; color: var(--text-main);">Workspace is Empty</h4>
+                <p style="color: var(--text-muted); font-size: 0.875rem; max-width: 400px; margin: 0 auto;">You do not currently have authorized access to any applications. Browse the catalog below to request permissions.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Section 1b: Pending Requests -->
+        {% if pending_requests %}
+        <div class="card" style="margin-top: 32px; padding: 24px;">
+            <h3 style="margin-bottom: 18px; display: flex; align-items: center; gap: 10px;">
+                <span>⏳</span> Pending Access Requests
+            </h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>Requested On</th>
+                            <th>Status</th>
+                            <th>Justification</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in pending_requests %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 1.25rem;">{{ req.application.icon or '🔌' }}</span>
+                                    <span style="font-weight: 600;">{{ req.application.name }}</span>
+                                </div>
+                            </td>
+                            <td style="font-size: 0.85rem; color: var(--text-muted);">{{ req.requested_at[:19] }}</td>
+                            <td><span class="badge" style="background: #fef3c7; color: #92400e;">{{ req.status }}</span></td>
+                            <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ req.reason }}">{{ req.reason }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Section 2: Requestable Catalog -->
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span>🔌</span> Available Applications Catalog
+        </h2>
+        
+        <div class="app-grid">
+            {% for app in available_apps %}
+            <div class="app-card">
+                <div class="app-icon-container" style="background: #f1f5f9; color: var(--text-muted);">
+                    {{ app.icon or '🔌' }}
+                </div>
+                <div class="app-category">{{ app.category or 'General' }}</div>
+                <div class="app-title">{{ app.name }}</div>
+                <div class="app-desc">{{ app.description or 'Request access to view resource contents.' }}</div>
+                <button onclick="openRequestModal('{{ app.id }}', '{{ app.name }}')" class="request-btn">
+                    Request Access 🔑
+                </button>
+            </div>
+            {% else %}
+            <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 30px; background: #f8fafc;">
+                <p style="color: var(--text-muted); font-size: 0.875rem;">No further applications are currently available for request in the directory.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Section 3: Requests Log / History -->
+        <div class="card" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <span>📋</span> Access Request History Log
+            </h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>Request Date</th>
+                            <th>Justification Reason</th>
+                            <th>Status</th>
+                            <th>Review details / Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in history_requests %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 1.25rem;">{{ req.application.icon or '🔌' }}</span>
+                                    <span style="font-weight: 600;">{{ req.application.name }}</span>
+                                </div>
+                            </td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">{{ req.requested_at[:19] }}</td>
+                            <td style="font-size: 0.875rem; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ req.reason }}">
+                                {{ req.reason }}
+                            </td>
+                            <td>
+                                {% if req.status == 'Pending' %}
+                                    <span class="badge" style="background: #fef3c7; color: #92400e;">PENDING REVIEW</span>
+                                {% elif req.status == 'Approved' %}
+                                    <span class="badge badge-success">APPROVED</span>
+                                {% elif req.status == 'Rejected' %}
+                                    <span class="badge badge-error">REJECTED</span>
+                                {% else %}
+                                    <span class="badge" style="background: #f1f5f9; color: #475569;">REVOKED</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size: 0.875rem;">
+                                {% if req.status == 'Pending' %}
+                                    <span style="color: var(--text-muted); font-style: italic;">Awaiting Administrator action</span>
+                                {% elif req.status == 'Approved' %}
+                                    <span style="color: var(--success);">Granted by <strong>{{ req.reviewed_by }}</strong></span>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ req.comments or 'No comment provided.' }}</div>
+                                {% elif req.status == 'Rejected' %}
+                                    <span style="color: var(--error);">Denied by <strong>{{ req.reviewed_by }}</strong></span>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Reason: {{ req.comments }}</div>
+                                {% else %}
+                                    <span style="color: var(--text-muted);">Revoked by <strong>{{ req.reviewed_by }}</strong></span>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Reason: {{ req.comments }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No requests history found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Request Access Modal -->
+<div id="requestModal" class="modal-overlay">
+    <div class="modal-content card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="margin: 0;">Request App Access</h2>
+            <button onclick="closeRequestModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form action="{{ url_for('app_access.request_access') }}" method="POST">
+            <input type="hidden" name="app_id" id="modal_app_id">
+            
+            <div class="form-group">
+                <label>Target Application</label>
+                <input type="text" id="modal_app_name" readonly class="form-input" style="background: #f1f5f9; font-weight: 600;">
+            </div>
+            
+            <div class="form-group">
+                <label for="modal_reason">Business Justification</label>
+                <textarea name="reason" id="modal_reason" required rows="4" class="form-input" style="resize: vertical; font-family: inherit;" placeholder="Please outline your business justification. Explain why you require access to this app (e.g. Daily tasks, deployment operations)..."></textarea>
+            </div>
+            
+            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="closeRequestModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit Access Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openRequestModal(appId, appName) {
+        document.getElementById('modal_app_id').value = appId;
+        document.getElementById('modal_app_name').value = appName;
+        document.getElementById('modal_reason').value = '';
+        document.getElementById('requestModal').style.display = 'flex';
+    }
+    
+    function closeRequestModal() {
+        document.getElementById('requestModal').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>

@@ -1,6 +1,8 @@
-from flask import request, jsonify, session
-from functools import wraps
+import datetime
 import logging
+from functools import wraps
+from flask import request, jsonify, session, flash, url_for, redirect
+from models.user_model import User
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -15,8 +17,6 @@ def ip_logic_middleware(app):
 
         # Continuous Verification (Zero Trust Principle)
         if 'user' in session:
-            from models.user_model import User
-            
             # 1. IP Binding Validation
             current_ip = request.remote_addr
             stored_ip = session.get('ip')
@@ -25,7 +25,6 @@ def ip_logic_middleware(app):
                 logger.warning(f"ADAPTIVE AUTH: IP Change detected for {session['user']}: {stored_ip} -> {current_ip}")
                 session['next_url'] = request.path
                 session.pop('mfa_verified_at', None) # Force re-verification
-                from flask import flash, url_for, redirect
                 flash("Zero Trust Alert: Your network environment has changed. Please re-verify your identity to continue.", "warning")
                 return redirect(url_for('auth.mfa_verify'))
 
@@ -61,9 +60,6 @@ def admin_required(f):
 def adaptive_mfa_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        import datetime
-        from flask import url_for, redirect, flash
-        
         if 'user' not in session:
             return redirect(url_for('auth.login'))
             
